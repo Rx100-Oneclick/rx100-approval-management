@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Filter, X, ChevronLeft, ChevronRight, Eye, ChevronDown, Clock, User, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuthFromParent } from '@/hooks/useAuthFromParent';
 import { useApprovalTemplates, type ApprovalTemplateRow } from '@/hooks/useApprovalTemplates';
 import { LoadingSpinner } from './LoadingSpinner';
+import { CreateApprovalModal } from './CreateApprovalModal';
 
 interface FilterState {
   status: string[];
@@ -12,7 +13,7 @@ interface FilterState {
 const statusOptions = ['Active', 'Draft', 'Retired'];
 
 export function ApprovalAuthorities() {
-  const { tenantId, isAuthenticated, isLoading: authLoading } = useAuthFromParent();
+  const { tenantId, userId, email, isAuthenticated, isLoading: authLoading } = useAuthFromParent();
   const { data: templates, isLoading: dataLoading, error } = useApprovalTemplates(tenantId);
 
   const [selectedAuthority, setSelectedAuthority] = useState<ApprovalTemplateRow | null>(null);
@@ -21,6 +22,8 @@ export function ApprovalAuthorities() {
   const [filters, setFilters] = useState<FilterState>({ status: [] });
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  const [showCreateModal, setShowCreateModal] = useState(false);
   
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
@@ -247,7 +250,10 @@ export function ApprovalAuthorities() {
                 </div>
                 
                 {/* Create Approval Button */}
-                <button className="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all"
+                >
                   Create Approval Workflow
                 </button>
               </div>
@@ -613,6 +619,18 @@ export function ApprovalAuthorities() {
           }
         }
       `}</style>
+
+      {/* Create Approval Workflow Modal */}
+      <CreateApprovalModal
+        open={showCreateModal}
+        onClose={(result) => {
+          setShowCreateModal(false);
+          // If created, could refresh data here
+        }}
+        tenantId={tenantId}
+        userId={userId}
+        email={email}
+      />
     </>
   );
 }
