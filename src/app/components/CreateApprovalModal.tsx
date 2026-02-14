@@ -139,23 +139,28 @@ export function CreateApprovalModal({ open, onClose, tenantId, userId, email }: 
 
   return (
     <>
-      {/* Full-page overlay backdrop */}
-      <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
+      {/* Full-page overlay */}
+      <div className="fixed inset-0 z-50">
+        {/* White background for loading, transparent once loaded */}
+        <div className={`absolute inset-0 transition-colors duration-300 ${
+          iframeLoaded ? 'bg-transparent pointer-events-none' : 'bg-white'
+        }`} />
+
         {/* Loading state */}
         {(loading || !iframeLoaded) && !error && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center">
+          <div className="absolute inset-0 z-10">
             <LoadingSpinner />
           </div>
         )}
 
         {/* Error state */}
         {error && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center">
-            <div className="bg-white rounded-xl p-8 max-w-md mx-4 shadow-2xl text-center">
-              <p className="text-sm text-red-600 mb-4">{error}</p>
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">
+            <div className="rounded-xl p-8 max-w-md mx-4 text-center">
+              <p className="text-sm text-destructive mb-4">{error}</p>
               <button
                 onClick={() => onClose({ action: 'cancelled' })}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted hover:bg-accent rounded-lg transition-colors"
               >
                 Close
               </button>
