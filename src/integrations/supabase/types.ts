@@ -387,6 +387,135 @@ export type Database = {
           },
         ]
       }
+      approval_template_steps: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          created_by: string
+          email: string
+          name: string
+          step_id: string
+          step_order: number
+          updated_at: string | null
+          user_id: string
+          version_id: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          created_by?: string
+          email: string
+          name: string
+          step_id?: string
+          step_order: number
+          updated_at?: string | null
+          user_id: string
+          version_id: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          created_by?: string
+          email?: string
+          name?: string
+          step_id?: string
+          step_order?: number
+          updated_at?: string | null
+          user_id?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_template_steps_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "approval_template_versions"
+            referencedColumns: ["version_id"]
+          },
+        ]
+      }
+      approval_template_versions: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          is_active: boolean | null
+          published_at: string | null
+          status: string
+          template_id: string
+          version_id: string
+          version_number: number
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string
+          is_active?: boolean | null
+          published_at?: string | null
+          status: string
+          template_id: string
+          version_id?: string
+          version_number: number
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          is_active?: boolean | null
+          published_at?: string | null
+          status?: string
+          template_id?: string
+          version_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "approval_templates"
+            referencedColumns: ["template_id"]
+          },
+        ]
+      }
+      approval_templates: {
+        Row: {
+          approval_template_name: string
+          approval_type: string
+          created_at: string | null
+          created_by: string
+          description: string
+          template_id: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          approval_template_name: string
+          approval_type: string
+          created_at?: string | null
+          created_by?: string
+          description: string
+          template_id?: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          approval_template_name?: string
+          approval_type?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string
+          template_id?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["uuid"]
+          },
+        ]
+      }
       audit_events: {
         Row: {
           actor: Json
