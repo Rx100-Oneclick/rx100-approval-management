@@ -1,389 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, X, ChevronLeft, ChevronRight, Eye, ChevronDown, Clock, User, FileText } from 'lucide-react';
-
-interface Authority {
-  id: string;
-  name: string;
-  code: string;
-  type: 'Financial' | 'Access' | 'Policy' | 'Operational';
-  scope: string;
-  scopeType: 'Organization' | 'Application' | 'Resource';
-  version: string;
-  status: 'Active' | 'Draft' | 'Retired';
-  lastUpdated: string;
-  createdBy: string;
-  createdAt: string;
-  avatar: string;
-}
-
-const mockAuthorities: Authority[] = [
-  {
-    id: '1',
-    name: 'Capital Expenditure > $50k',
-    code: 'AUTH-FIN-2024-001',
-    type: 'Financial',
-    scope: 'Global Finance Org',
-    scopeType: 'Organization',
-    version: 'v2.4.1',
-    status: 'Active',
-    lastUpdated: 'Feb 08, 2024',
-    createdBy: 'Marcus Thorne',
-    createdAt: 'October 12, 2023 • 14:30 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=8'
-  },
-  {
-    id: '2',
-    name: 'Production Database Access',
-    code: 'AUTH-ACC-2024-042',
-    type: 'Access',
-    scope: 'AWS Production Cluster',
-    scopeType: 'Resource',
-    version: 'v1.0.8',
-    status: 'Active',
-    lastUpdated: 'Jan 15, 2024',
-    createdBy: 'Sarah Chen',
-    createdAt: 'September 5, 2023 • 09:15 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=1'
-  },
-  {
-    id: '3',
-    name: 'Information Security Policy Exception',
-    code: 'AUTH-POL-2023-019',
-    type: 'Policy',
-    scope: 'Enterprise Security',
-    scopeType: 'Organization',
-    version: 'v3.0.0',
-    status: 'Draft',
-    lastUpdated: 'Feb 09, 2024',
-    createdBy: 'Emily Rodriguez',
-    createdAt: 'November 20, 2023 • 16:45 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=5'
-  },
-  {
-    id: '4',
-    name: 'Procurement Contract Review',
-    code: 'AUTH-OPR-2023-882',
-    type: 'Operational',
-    scope: 'Legal & Compliance',
-    scopeType: 'Organization',
-    version: 'v1.2.0',
-    status: 'Retired',
-    lastUpdated: 'Dec 20, 2023',
-    createdBy: 'David Kim',
-    createdAt: 'August 10, 2023 • 11:20 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=8'
-  },
-  {
-    id: '5',
-    name: 'Cloud Infrastructure Scaling',
-    code: 'AUTH-OPR-2024-005',
-    type: 'Operational',
-    scope: 'Engineering',
-    scopeType: 'Application',
-    version: 'v2.1.0',
-    status: 'Active',
-    lastUpdated: 'Feb 01, 2024',
-    createdBy: 'Jessica Wang',
-    createdAt: 'January 10, 2024 • 10:00 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=9'
-  },
-  {
-    id: '6',
-    name: 'Payment Processing Authority',
-    code: 'AUTH-FIN-2024-012',
-    type: 'Financial',
-    scope: 'Finance Operations',
-    scopeType: 'Application',
-    version: 'v1.5.2',
-    status: 'Active',
-    lastUpdated: 'Feb 05, 2024',
-    createdBy: 'Robert Chang',
-    createdAt: 'December 1, 2023 • 13:30 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=13'
-  },
-  {
-    id: '7',
-    name: 'Customer Data Export',
-    code: 'AUTH-ACC-2024-033',
-    type: 'Access',
-    scope: 'Customer Database',
-    scopeType: 'Resource',
-    version: 'v2.0.1',
-    status: 'Active',
-    lastUpdated: 'Jan 28, 2024',
-    createdBy: 'Amanda Lee',
-    createdAt: 'October 25, 2023 • 15:00 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=10'
-  },
-  {
-    id: '8',
-    name: 'Emergency System Override',
-    code: 'AUTH-OPR-2024-099',
-    type: 'Operational',
-    scope: 'Critical Systems',
-    scopeType: 'Application',
-    version: 'v1.0.0',
-    status: 'Draft',
-    lastUpdated: 'Feb 07, 2024',
-    createdBy: 'James Wilson',
-    createdAt: 'January 20, 2024 • 08:45 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=14'
-  },
-  {
-    id: '9',
-    name: 'Vendor Payment Approval',
-    code: 'AUTH-FIN-2024-018',
-    type: 'Financial',
-    scope: 'Accounts Payable',
-    scopeType: 'Organization',
-    version: 'v3.2.1',
-    status: 'Active',
-    lastUpdated: 'Jan 30, 2024',
-    createdBy: 'Lisa Martinez',
-    createdAt: 'November 30, 2023 • 12:15 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=20'
-  },
-  {
-    id: '10',
-    name: 'API Rate Limit Override',
-    code: 'AUTH-POL-2024-055',
-    type: 'Policy',
-    scope: 'API Gateway',
-    scopeType: 'Resource',
-    version: 'v1.8.3',
-    status: 'Active',
-    lastUpdated: 'Feb 02, 2024',
-    createdBy: 'Kevin Park',
-    createdAt: 'December 5, 2023 • 14:20 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=15'
-  },
-  {
-    id: '11',
-    name: 'Employee Onboarding Access',
-    code: 'AUTH-ACC-2024-067',
-    type: 'Access',
-    scope: 'HR Systems',
-    scopeType: 'Application',
-    version: 'v2.3.0',
-    status: 'Active',
-    lastUpdated: 'Jan 25, 2024',
-    createdBy: 'Sophia Anderson',
-    createdAt: 'January 5, 2024 • 09:30 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=25'
-  },
-  {
-    id: '12',
-    name: 'Data Retention Policy',
-    code: 'AUTH-POL-2023-088',
-    type: 'Policy',
-    scope: 'Enterprise Data',
-    scopeType: 'Organization',
-    version: 'v1.1.5',
-    status: 'Active',
-    lastUpdated: 'Jan 18, 2024',
-    createdBy: 'Thomas Brown',
-    createdAt: 'September 15, 2023 • 16:00 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=33'
-  },
-  {
-    id: '13',
-    name: 'Marketing Campaign Budget',
-    code: 'AUTH-FIN-2024-021',
-    type: 'Financial',
-    scope: 'Marketing Division',
-    scopeType: 'Organization',
-    version: 'v1.9.2',
-    status: 'Draft',
-    lastUpdated: 'Feb 06, 2024',
-    createdBy: 'Rachel Green',
-    createdAt: 'November 10, 2023 • 10:45 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=45'
-  },
-  {
-    id: '14',
-    name: 'Contract Signing Authority',
-    code: 'AUTH-FIN-2024-014',
-    type: 'Financial',
-    scope: 'Legal Department',
-    scopeType: 'Organization',
-    version: 'v2.0.8',
-    status: 'Active',
-    lastUpdated: 'Jan 22, 2024',
-    createdBy: 'Daniel White',
-    createdAt: 'December 2, 2023 • 11:30 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=52'
-  },
-  {
-    id: '15',
-    name: 'System Configuration Change',
-    code: 'AUTH-OPR-2024-041',
-    type: 'Operational',
-    scope: 'Production Systems',
-    scopeType: 'Application',
-    version: 'v1.4.7',
-    status: 'Active',
-    lastUpdated: 'Jan 20, 2024',
-    createdBy: 'Olivia Harris',
-    createdAt: 'November 20, 2023 • 13:15 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=21'
-  },
-  {
-    id: '16',
-    name: 'Customer PII Access',
-    code: 'AUTH-ACC-2024-073',
-    type: 'Access',
-    scope: 'Customer Database',
-    scopeType: 'Resource',
-    version: 'v3.1.2',
-    status: 'Active',
-    lastUpdated: 'Feb 04, 2024',
-    createdBy: 'Nathan Scott',
-    createdAt: 'December 10, 2023 • 15:45 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=60'
-  },
-  {
-    id: '17',
-    name: 'Budget Reallocation',
-    code: 'AUTH-FIN-2024-029',
-    type: 'Financial',
-    scope: 'Finance Controller',
-    scopeType: 'Organization',
-    version: 'v1.7.9',
-    status: 'Draft',
-    lastUpdated: 'Feb 03, 2024',
-    createdBy: 'Emma Thompson',
-    createdAt: 'November 15, 2023 • 14:00 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=30'
-  },
-  {
-    id: '18',
-    name: 'Disaster Recovery Execution',
-    code: 'AUTH-POL-2024-012',
-    type: 'Policy',
-    scope: 'IT Operations',
-    scopeType: 'Organization',
-    version: 'v2.5.3',
-    status: 'Active',
-    lastUpdated: 'Jan 27, 2024',
-    createdBy: 'Christopher Lee',
-    createdAt: 'December 1, 2023 • 09:00 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=70'
-  },
-  {
-    id: '19',
-    name: 'Third-Party Integration',
-    code: 'AUTH-OPR-2024-055',
-    type: 'Operational',
-    scope: 'API Platform',
-    scopeType: 'Application',
-    version: 'v1.3.6',
-    status: 'Active',
-    lastUpdated: 'Jan 31, 2024',
-    createdBy: 'Isabella Garcia',
-    createdAt: 'November 25, 2023 • 11:00 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=26'
-  },
-  {
-    id: '20',
-    name: 'Quarterly Financial Review',
-    code: 'AUTH-FIN-2024-037',
-    type: 'Financial',
-    scope: 'Finance Operations',
-    scopeType: 'Organization',
-    version: 'v2.2.4',
-    status: 'Active',
-    lastUpdated: 'Feb 01, 2024',
-    createdBy: 'Matthew Johnson',
-    createdAt: 'December 15, 2023 • 16:30 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=65'
-  },
-  {
-    id: '21',
-    name: 'Network Security Protocol',
-    code: 'AUTH-POL-2024-028',
-    type: 'Policy',
-    scope: 'Network Infrastructure',
-    scopeType: 'Resource',
-    version: 'v1.6.1',
-    status: 'Active',
-    lastUpdated: 'Jan 29, 2024',
-    createdBy: 'Ava Martinez',
-    createdAt: 'November 30, 2023 • 10:15 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=32'
-  },
-  {
-    id: '22',
-    name: 'Procurement Approval Workflow',
-    code: 'AUTH-FIN-2023-091',
-    type: 'Financial',
-    scope: 'Procurement',
-    scopeType: 'Organization',
-    version: 'v3.0.2',
-    status: 'Retired',
-    lastUpdated: 'Dec 15, 2023',
-    createdBy: 'Ethan Davis',
-    createdAt: 'August 5, 2023 • 12:00 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=55'
-  },
-  {
-    id: '23',
-    name: 'Email Communication Policy',
-    code: 'AUTH-POL-2024-041',
-    type: 'Policy',
-    scope: 'Corporate Communications',
-    scopeType: 'Organization',
-    version: 'v1.0.9',
-    status: 'Active',
-    lastUpdated: 'Jan 24, 2024',
-    createdBy: 'Mia Wilson',
-    createdAt: 'November 20, 2023 • 14:45 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=42'
-  },
-  {
-    id: '24',
-    name: 'Remote Work VPN Access',
-    code: 'AUTH-ACC-2024-089',
-    type: 'Access',
-    scope: 'Corporate Network',
-    scopeType: 'Resource',
-    version: 'v2.4.5',
-    status: 'Active',
-    lastUpdated: 'Feb 02, 2024',
-    createdBy: 'Alexander Moore',
-    createdAt: 'December 10, 2023 • 08:30 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=68'
-  },
-  {
-    id: '25',
-    name: 'Customer Refund Processing',
-    code: 'AUTH-FIN-2024-044',
-    type: 'Financial',
-    scope: 'Customer Service',
-    scopeType: 'Application',
-    version: 'v1.8.7',
-    status: 'Active',
-    lastUpdated: 'Jan 26, 2024',
-    createdBy: 'Charlotte Taylor',
-    createdAt: 'January 5, 2024 • 15:00 UTC',
-    avatar: 'https://i.pravatar.cc/150?img=48'
-  }
-];
+import { format } from 'date-fns';
+import { useAuthFromParent } from '@/hooks/useAuthFromParent';
+import { useApprovalTemplates, type ApprovalTemplateRow } from '@/hooks/useApprovalTemplates';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface FilterState {
-  type: string[];
-  scopeType: string[];
   status: string[];
 }
 
-const typeOptions = ['Financial', 'Access', 'Policy', 'Operational'];
-const scopeTypeOptions = ['Organization', 'Application'];
 const statusOptions = ['Active', 'Draft', 'Retired'];
 
 export function ApprovalAuthorities() {
-  const [selectedAuthority, setSelectedAuthority] = useState<Authority | null>(null);
+  const { tenantId, isAuthenticated, isLoading: authLoading } = useAuthFromParent();
+  const { data: templates, isLoading: dataLoading, error } = useApprovalTemplates(tenantId);
+
+  const [selectedAuthority, setSelectedAuthority] = useState<ApprovalTemplateRow | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({ type: [], scopeType: [], status: [] });
+  const [filters, setFilters] = useState<FilterState>({ status: [] });
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   
@@ -394,11 +29,11 @@ export function ApprovalAuthorities() {
   useEffect(() => {
     const calculateRows = () => {
       const viewportHeight = window.innerHeight;
-      const headerHeight = 140; // Reduced from 200
-      const footerHeight = 48;  // Reduced from 60
-      const tableHeaderHeight = 40; // Reduced from 48
-      const rowHeight = 56; // Reduced from 73 (py-2 instead of py-4)
-      const availableHeight = viewportHeight - headerHeight - footerHeight - tableHeaderHeight - 60; // Reduced margin
+      const headerHeight = 140;
+      const footerHeight = 48;
+      const tableHeaderHeight = 40;
+      const rowHeight = 56;
+      const availableHeight = viewportHeight - headerHeight - footerHeight - tableHeaderHeight - 60;
       const calculatedRows = Math.floor(availableHeight / rowHeight);
       setRowsPerPage(Math.max(5, calculatedRows));
     };
@@ -433,27 +68,29 @@ export function ApprovalAuthorities() {
   };
 
   const removeFilter = (category: keyof FilterState, value: string) => {
-    const newFilters = {
-      ...filters,
-      [category]: filters[category].filter(v => v !== value)
-    };
-    setFilters(newFilters);
+    setFilters(prev => ({
+      ...prev,
+      [category]: prev[category].filter(v => v !== value)
+    }));
   };
 
   const clearAllFilters = () => {
-    setFilters({ type: [], scopeType: [], status: [] });
+    setFilters({ status: [] });
   };
 
-  const activeFilterCount = filters.type.length + filters.scopeType.length + filters.status.length;
+  const activeFilterCount = filters.status.length;
+
+  // Show loading spinner
+  if (authLoading || dataLoading) {
+    return <LoadingSpinner />;
+  }
 
   // Filter data
-  const filteredData = mockAuthorities.filter(auth => {
-    const matchesSearch = auth.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         auth.code.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filters.type.length === 0 || filters.type.includes(auth.type);
-    const matchesScopeType = filters.scopeType.length === 0 || filters.scopeType.includes(auth.scopeType);
-    const matchesStatus = filters.status.length === 0 || filters.status.includes(auth.status);
-    return matchesSearch && matchesType && matchesScopeType && matchesStatus;
+  const filteredData = templates.filter(t => {
+    const matchesSearch = t.approval_template_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const status = t.version_status || '';
+    const matchesStatus = filters.status.length === 0 || filters.status.includes(status);
+    return matchesSearch && matchesStatus;
   });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -463,10 +100,9 @@ export function ApprovalAuthorities() {
   );
 
   // Calculate summary metrics
-  const totalAuthorities = mockAuthorities.length;
-  const activeCount = mockAuthorities.filter(a => a.status === 'Active').length;
-  const draftCount = mockAuthorities.filter(a => a.status === 'Draft').length;
-  const retiredCount = mockAuthorities.filter(a => a.status === 'Retired').length;
+  const activeCount = templates.filter(a => a.version_status === 'Active').length;
+  const draftCount = templates.filter(a => a.version_status === 'Draft').length;
+  const retiredCount = templates.filter(a => a.version_status === 'Retired').length;
 
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
@@ -485,6 +121,29 @@ export function ApprovalAuthorities() {
       'Retired': 'bg-gray-400'
     };
     return colors[status] || 'bg-gray-400';
+  };
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '-';
+    try {
+      return format(new Date(dateStr), 'MMM dd, yyyy');
+    } catch {
+      return '-';
+    }
+  };
+
+  const formatCreatedAt = (dateStr: string | null) => {
+    if (!dateStr) return '-';
+    try {
+      return format(new Date(dateStr), "MMMM d, yyyy • HH:mm 'UTC'");
+    } catch {
+      return '-';
+    }
+  };
+
+  const getVersionDisplay = (versionNumber: number | null) => {
+    if (versionNumber === null || versionNumber === undefined) return '-';
+    return `v${versionNumber}`;
   };
 
   return (
@@ -507,7 +166,7 @@ export function ApprovalAuthorities() {
             <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
               {/* Search Bar and Filter */}
               <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full lg:w-auto">
-                {/* Search Bar - Smaller width */}
+                {/* Search Bar */}
                 <div className="w-full sm:w-80">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -537,52 +196,10 @@ export function ApprovalAuthorities() {
                     )}
                   </button>
 
-                  {/* Filter Dropdown */}
+                  {/* Filter Dropdown - Status only */}
                   {showFilterDropdown && (
                     <div className="absolute left-0 sm:right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-30 overflow-hidden">
-                      
-                      
                       <div className="p-4 space-y-4 max-h-96 overflow-y-auto">
-                        {/* Authority Type */}
-                        <div>
-                          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                            Authority Type
-                          </label>
-                          <div className="space-y-2">
-                            {typeOptions.map(type => (
-                              <label key={type} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
-                                <input
-                                  type="checkbox"
-                                  checked={filters.type.includes(type)}
-                                  onChange={() => toggleFilter('type', type)}
-                                  className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                                />
-                                <span className="text-sm text-gray-700">{type}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Scope Type */}
-                        <div>
-                          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                            Scope Type
-                          </label>
-                          <div className="space-y-2">
-                            {scopeTypeOptions.map(scopeType => (
-                              <label key={scopeType} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
-                                <input
-                                  type="checkbox"
-                                  checked={filters.scopeType.includes(scopeType)}
-                                  onChange={() => toggleFilter('scopeType', scopeType)}
-                                  className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                                />
-                                <span className="text-sm text-gray-700">{scopeType}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-
                         {/* Status */}
                         <div>
                           <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
@@ -639,34 +256,6 @@ export function ApprovalAuthorities() {
             {/* Active Filter Chips */}
             {activeFilterCount > 0 && (
               <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-200">
-                {filters.type.map(type => (
-                  <span
-                    key={`type-${type}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-full"
-                  >
-                    Type: {type}
-                    <button
-                      onClick={() => removeFilter('type', type)}
-                      className="hover:bg-blue-100 rounded-full p-0.5 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-                {filters.scopeType.map(scopeType => (
-                  <span
-                    key={`scopeType-${scopeType}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200 rounded-full"
-                  >
-                    Scope: {scopeType}
-                    <button
-                      onClick={() => removeFilter('scopeType', scopeType)}
-                      className="hover:bg-purple-100 rounded-full p-0.5 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
                 {filters.status.map(status => (
                   <span
                     key={`status-${status}`}
@@ -691,120 +280,136 @@ export function ApprovalAuthorities() {
             )}
           </div>
 
+          {/* Empty state */}
+          {templates.length === 0 && !error && (
+            <div className="p-12 text-center">
+              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-sm font-medium text-gray-900 mb-1">No approval authorities found</h3>
+              <p className="text-xs text-gray-500">No approval templates exist for this tenant yet.</p>
+            </div>
+          )}
+
+          {/* Error state */}
+          {error && (
+            <div className="p-12 text-center">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto" ref={tableContainerRef}>
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    Authority Name
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    Scope
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">
-                    Version
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    Last Updated
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {paginatedData.map((authority) => (
-                  <tr
-                    key={authority.id}
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() => setSelectedAuthority(authority)}
-                  >
-                    <td className="px-4 py-2">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-[rgb(16,40,40)]">
-                          {authority.name}
-                        </span>
-                        <span className="text-[11px] text-gray-400 font-mono mt-0.5">
-                          {authority.code}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border uppercase ${getTypeColor(authority.type)}`}>
-                        {authority.type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2">
-                      <span className="text-sm text-gray-600">{authority.scope}</span>
-                    </td>
-                    <td className="px-4 py-2 text-center">
-                      <span className="text-sm text-gray-500">{authority.version}</span>
-                    </td>
-                    <td className="px-4 py-2">
-                      <span className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
-                        <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(authority.status)}`}></span>
-                        {authority.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-500">
-                      {authority.lastUpdated}
-                    </td>
-                    <td className="px-4 py-2">
-                      <div className="flex justify-end">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedAuthority(authority);
-                          }}
-                          className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          View details
-                        </button>
-                      </div>
-                    </td>
+          {templates.length > 0 && (
+            <div className="hidden md:block overflow-x-auto" ref={tableContainerRef}>
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                      Authority Name
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                      Scope
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">
+                      Version
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                      Last Updated
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {paginatedData.map((t) => (
+                    <tr
+                      key={t.template_id}
+                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => setSelectedAuthority(t)}
+                    >
+                      <td className="px-4 py-2">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-[rgb(16,40,40)]">
+                            {t.approval_template_name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border uppercase ${getTypeColor(t.approval_type)}`}>
+                          {t.approval_type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        <span className="text-sm text-gray-600">-</span>
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        <span className="text-sm text-gray-500">{getVersionDisplay(t.version_number)}</span>
+                      </td>
+                      <td className="px-4 py-2">
+                        <span className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
+                          <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(t.version_status || '')}`}></span>
+                          {t.version_status || '-'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-500">
+                        {formatDate(t.updated_at)}
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex justify-end">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedAuthority(t);
+                            }}
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            View details
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Mobile Card View */}
-          <div className="md:hidden divide-y divide-gray-100">
-            {paginatedData.map((authority) => (
-              <div
-                key={authority.id}
-                onClick={() => setSelectedAuthority(authority)}
-                className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900 mb-1">
-                      {authority.name}
-                    </h3>
-                    <p className="text-xs text-gray-400 font-mono">{authority.code}</p>
+          {templates.length > 0 && (
+            <div className="md:hidden divide-y divide-gray-100">
+              {paginatedData.map((t) => (
+                <div
+                  key={t.template_id}
+                  onClick={() => setSelectedAuthority(t)}
+                  className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-gray-900 mb-1">
+                        {t.approval_template_name}
+                      </h3>
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
+                      <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(t.version_status || '')}`}></span>
+                      {t.version_status || '-'}
+                    </span>
                   </div>
-                  <span className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
-                    <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(authority.status)}`}></span>
-                    {authority.status}
-                  </span>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span className={`px-2 py-0.5 rounded border uppercase ${getTypeColor(t.approval_type)}`}>
+                      {t.approval_type}
+                    </span>
+                    <span>{formatDate(t.updated_at)}</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span className={`px-2 py-0.5 rounded border uppercase ${getTypeColor(authority.type)}`}>
-                    {authority.type}
-                  </span>
-                  <span>{authority.lastUpdated}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Footer with Pagination */}
           {totalPages > 1 && (
@@ -897,39 +502,35 @@ export function ApprovalAuthorities() {
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Authority ID</span>
-                      <span className="font-mono text-gray-900">{selectedAuthority.code}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Name</span>
                       <span className="font-medium text-gray-900 text-right max-w-[60%]">
-                        {selectedAuthority.name}
+                        {selectedAuthority.approval_template_name}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Type</span>
-                      <span className="font-medium text-gray-900">{selectedAuthority.type}</span>
+                      <span className="font-medium text-gray-900">{selectedAuthority.approval_type}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Scope</span>
-                      <span className="font-medium text-gray-900 text-right max-w-[60%]">{selectedAuthority.scope}</span>
+                      <span className="font-medium text-gray-900 text-right max-w-[60%]">-</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Scope Type</span>
-                      <span className="font-medium text-gray-900">{selectedAuthority.scopeType}</span>
+                      <span className="font-medium text-gray-900">-</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Version</span>
-                      <span className="font-medium text-gray-900">{selectedAuthority.version}</span>
+                      <span className="font-medium text-gray-900">{getVersionDisplay(selectedAuthority.version_number)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Status</span>
                       <span className={`font-semibold ${
-                        selectedAuthority.status === 'Active' ? 'text-emerald-600' :
-                        selectedAuthority.status === 'Draft' ? 'text-amber-600' :
+                        selectedAuthority.version_status === 'Active' ? 'text-emerald-600' :
+                        selectedAuthority.version_status === 'Draft' ? 'text-amber-600' :
                         'text-gray-500'
                       }`}>
-                        {selectedAuthority.status}
+                        {selectedAuthority.version_status || '-'}
                       </span>
                     </div>
                   </div>
@@ -948,15 +549,7 @@ export function ApprovalAuthorities() {
                     <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white ring-4 ring-emerald-50"></div>
                     <div>
                       <p className="text-sm font-semibold text-gray-900">Last Updated</p>
-                      <p className="text-xs text-gray-600 mt-0.5">{selectedAuthority.lastUpdated}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="relative">
-                    <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-blue-600 border-2 border-white ring-4 ring-blue-50"></div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Version Released</p>
-                      <p className="text-xs text-gray-600 mt-0.5">{selectedAuthority.version} • Jan 15, 2024</p>
+                      <p className="text-xs text-gray-600 mt-0.5">{formatDate(selectedAuthority.updated_at)}</p>
                     </div>
                   </div>
                   
@@ -964,30 +557,28 @@ export function ApprovalAuthorities() {
                     <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-gray-400 border-2 border-white ring-4 ring-gray-50"></div>
                     <div>
                       <p className="text-sm font-semibold text-gray-900">Created</p>
-                      <p className="text-xs text-gray-600 mt-0.5">{selectedAuthority.createdAt}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">{formatCreatedAt(selectedAuthority.created_at)}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Creator Information Section */}
+              {/* Created By Section */}
               <div className="space-y-4">
                 <h5 className="text-xs md:text-sm font-bold text-gray-800 uppercase tracking-wider">
-                  Owner Information
+                  Created By
                 </h5>
                 <div className="p-4 bg-white border border-gray-200 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <img
-                      src={selectedAuthority.avatar}
-                      alt={selectedAuthority.createdBy}
-                      className="w-12 h-12 rounded-full border border-gray-200"
-                    />
+                    <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-sm">
+                      {(selectedAuthority.creator_name || '?').charAt(0).toUpperCase()}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900">
-                        {selectedAuthority.createdBy}
+                        {selectedAuthority.creator_name || 'Unknown'}
                       </p>
                       <p className="text-xs text-gray-600 mt-0.5">
-                        Created: {selectedAuthority.createdAt}
+                        {selectedAuthority.creator_email || '-'}
                       </p>
                     </div>
                   </div>
@@ -1001,9 +592,6 @@ export function ApprovalAuthorities() {
                 </p>
               </div>
             </div>
-
-            {/* DRAWER FOOTER */}
-            
           </aside>
         </>
       )}
