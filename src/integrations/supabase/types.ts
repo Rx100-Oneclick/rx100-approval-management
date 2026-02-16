@@ -443,7 +443,7 @@ export type Database = {
           status: string
           template_id: string
           version_id: string
-          version_number: number
+          version_number: string
         }
         Insert: {
           created_at?: string | null
@@ -453,7 +453,7 @@ export type Database = {
           status: string
           template_id: string
           version_id?: string
-          version_number: number
+          version_number: string
         }
         Update: {
           created_at?: string | null
@@ -463,7 +463,7 @@ export type Database = {
           status?: string
           template_id?: string
           version_id?: string
-          version_number?: number
+          version_number?: string
         }
         Relationships: [
           {
