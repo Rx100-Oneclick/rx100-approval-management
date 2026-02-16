@@ -11,7 +11,7 @@ export interface ApprovalTemplateRow {
   updated_at: string | null;
   tenant_id: string;
   // joined fields
-  version_number: number | null;
+  version_number: string | null;
   version_status: string | null;
   creator_name: string | null;
   creator_email: string | null;
@@ -58,7 +58,7 @@ export function useApprovalTemplates(tenantId: string | null) {
         if (vErr) throw vErr;
 
         // Build map: template_id -> latest version
-        const versionMap = new Map<string, { version_number: number; status: string }>();
+        const versionMap = new Map<string, { version_number: string; status: string }>();
         for (const v of versions || []) {
           if (!versionMap.has(v.template_id)) {
             versionMap.set(v.template_id, {
