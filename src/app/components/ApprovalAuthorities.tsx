@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Filter, X, ChevronLeft, ChevronRight, Eye, ChevronDown, Clock, User, FileText, Pencil } from 'lucide-react';
+import { Search, Filter, X, ChevronLeft, ChevronRight, Eye, ChevronDown, Clock, User, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuthFromParent } from '@/hooks/useAuthFromParent';
 import { useApprovalTemplates, type ApprovalTemplateRow } from '@/hooks/useApprovalTemplates';
@@ -489,22 +489,12 @@ export function ApprovalAuthorities() {
             {/* DRAWER HEADER */}
             <div className="px-4 md:px-6 py-4 md:py-6 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Authority Details</h3>
-              <div className="flex items-center gap-2">
-                {selectedAuthority.version_status?.toUpperCase() === 'DRAFT' && (
-                  <button
-                    className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
-                    title="Edit"
-                  >
-                    <Pencil className="w-4 h-4 text-gray-600" />
-                  </button>
-                )}
-                <button
-                  onClick={closeDrawer}
-                  className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
+              <button
+                onClick={closeDrawer}
+                className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
             </div>
 
             {/* DRAWER CONTENT (Scrollable) */}
@@ -610,10 +600,7 @@ export function ApprovalAuthorities() {
             </div>
 
             {/* DRAWER FOOTER */}
-            <div className="px-4 md:px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
-              <button className="px-4 py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-sm transition-all">
-                Set Approval Hierarchy
-              </button>
+            <div className="px-4 md:px-6 py-4 border-t border-gray-200 flex items-center justify-end">
               <button className="px-4 py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-sm transition-all">
                 Set Scope
               </button>
