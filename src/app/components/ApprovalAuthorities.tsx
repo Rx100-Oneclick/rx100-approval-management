@@ -314,9 +314,6 @@ export function ApprovalAuthorities() {
                     <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                       Type
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                      Scope
-                    </th>
                     <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">
                       Version
                     </th>
@@ -349,9 +346,6 @@ export function ApprovalAuthorities() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border uppercase ${getTypeColor(t.approval_type)}`}>
                           {t.approval_type}
                         </span>
-                      </td>
-                      <td className="px-4 py-2">
-                        <span className="text-sm text-gray-600">-</span>
                       </td>
                       <td className="px-4 py-2 text-center">
                         <span className="text-sm text-gray-500">{getVersionDisplay(t.version_number)}</span>
@@ -518,14 +512,6 @@ export function ApprovalAuthorities() {
                       <span className="font-medium text-gray-900">{selectedAuthority.approval_type}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Scope</span>
-                      <span className="font-medium text-gray-900 text-right max-w-[60%]">-</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Scope Type</span>
-                      <span className="font-medium text-gray-900">-</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Version</span>
                       <span className="font-medium text-gray-900">{getVersionDisplay(selectedAuthority.version_number)}</span>
                     </div>
@@ -599,12 +585,6 @@ export function ApprovalAuthorities() {
               </div>
             </div>
 
-            {/* DRAWER FOOTER */}
-            <div className="px-4 md:px-6 py-4 border-t border-gray-200 flex items-center justify-end">
-              <button className="px-4 py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-sm transition-all">
-                Set Scope
-              </button>
-            </div>
           </aside>
         </>
       )}
