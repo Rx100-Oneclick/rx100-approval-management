@@ -92,7 +92,7 @@ export function ApprovalAuthorities() {
   const filteredData = templates.filter(t => {
     const matchesSearch = t.approval_template_name.toLowerCase().includes(searchTerm.toLowerCase());
     const status = t.version_status || '';
-    const matchesStatus = filters.status.length === 0 || filters.status.includes(status);
+    const matchesStatus = filters.status.length === 0 || filters.status.some(f => f.toLowerCase() === status.toLowerCase());
     return matchesSearch && matchesStatus;
   });
 
@@ -102,10 +102,10 @@ export function ApprovalAuthorities() {
     currentPage * rowsPerPage
   );
 
-  // Calculate summary metrics
-  const activeCount = templates.filter(a => a.version_status === 'Active').length;
-  const draftCount = templates.filter(a => a.version_status === 'Draft').length;
-  const retiredCount = templates.filter(a => a.version_status === 'Retired').length;
+  // Calculate summary metrics (case-insensitive matching)
+  const activeCount = templates.filter(a => a.version_status?.toLowerCase() === 'active').length;
+  const draftCount = templates.filter(a => a.version_status?.toLowerCase() === 'draft').length;
+  const retiredCount = templates.filter(a => a.version_status?.toLowerCase() === 'retired').length;
 
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
