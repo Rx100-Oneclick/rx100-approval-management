@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback } from 'react';
+import { useApprovalAuthorityDataClient } from '@/microapp/runtime';
 
 export interface ApprovalTemplateRow {
   template_id: string;
@@ -18,103 +18,110 @@ export interface ApprovalTemplateRow {
 }
 
 export function useApprovalTemplates(tenantId: string | null) {
+  const { client, error: clientError } = useApprovalAuthorityDataClient();
   const [data, setData] = useState<ApprovalTemplateRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!tenantId) {
+  const fetchData = useCallback(async () => {
+    if (!tenantId || !client) {
       setIsLoading(false);
       return;
     }
 
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        // 1. Fetch templates
-        const { data: templates, error: tErr } = await supabase
-          .from('approval_templates')
-          .select('*')
-          .eq('tenant_id', tenantId);
+    try {
+      // 1. Fetch templates
+      const { data: templates, error: tErr } = await client
+        .from('approval_templates')
+        .select('*')
+        .eq('tenant_id', tenantId);
 
-        if (tErr) throw tErr;
-        if (!templates || templates.length === 0) {
-          setData([]);
-          setIsLoading(false);
-          return;
-        }
-
-        const templateIds = templates.map(t => t.template_id);
-
-        // 2. Fetch latest versions for each template
-        const { data: versions, error: vErr } = await supabase
-          .from('approval_template_versions')
-          .select('*')
-          .in('template_id', templateIds)
-          .order('version_number', { ascending: false });
-
-        if (vErr) throw vErr;
-
-        // Build map: template_id -> latest version
-        const versionMap = new Map<string, { version_number: string; status: string }>();
-        for (const v of versions || []) {
-          if (!versionMap.has(v.template_id)) {
-            versionMap.set(v.template_id, {
-              version_number: v.version_number,
-              status: v.status,
-            });
-          }
-        }
-
-        // 3. Fetch creator info from organization_members
-        const creatorIds = [...new Set(templates.map(t => t.created_by))];
-        const { data: members, error: mErr } = await supabase
-          .from('organization_members')
-          .select('user_id, full_name, email')
-          .in('user_id', creatorIds);
-
-        if (mErr) throw mErr;
-
-        const memberMap = new Map<string, { full_name: string; email: string }>();
-        for (const m of members || []) {
-          if (m.user_id) {
-            memberMap.set(m.user_id, { full_name: m.full_name, email: m.email });
-          }
-        }
-
-        // 4. Combine
-        const combined: ApprovalTemplateRow[] = templates.map(t => {
-          const ver = versionMap.get(t.template_id);
-          const creator = memberMap.get(t.created_by);
-          return {
-            template_id: t.template_id,
-            approval_template_name: t.approval_template_name,
-            approval_type: t.approval_type,
-            description: t.description,
-            created_by: t.created_by,
-            created_at: t.created_at,
-            updated_at: t.updated_at,
-            tenant_id: t.tenant_id,
-            version_number: ver?.version_number ?? null,
-            version_status: ver?.status ?? null,
-            creator_name: creator?.full_name ?? null,
-            creator_email: creator?.email ?? null,
-          };
-        });
-
-        setData(combined);
-      } catch (err: any) {
-        console.error('Failed to fetch approval templates:', err);
-        setError(err.message || 'Failed to fetch data');
-      } finally {
+      if (tErr) throw tErr;
+      if (!templates || templates.length === 0) {
+        setData([]);
         setIsLoading(false);
+        return;
       }
-    };
 
-    fetchData();
-  }, [tenantId]);
+      const templateIds = templates.map(t => t.template_id);
 
-  return { data, isLoading, error };
+      // 2. Fetch latest versions for each template
+      const { data: versions, error: vErr } = await client
+        .from('approval_template_versions')
+        .select('*')
+        .in('template_id', templateIds)
+        .order('version_number', { ascending: false });
+
+      if (vErr) throw vErr;
+
+      // Build map: template_id -> latest version
+      const versionMap = new Map<string, { version_number: string; status: string }>();
+      for (const v of versions || []) {
+        if (!versionMap.has(v.template_id)) {
+          versionMap.set(v.template_id, {
+            version_number: v.version_number,
+            status: v.status,
+          });
+        }
+      }
+
+      // 3. Fetch creator info from organization_members
+      const creatorIds = [...new Set(templates.map(t => t.created_by))];
+      const { data: members, error: mErr } = await client
+        .from('organization_members')
+        .select('user_id, full_name, email')
+        .in('user_id', creatorIds);
+
+      if (mErr) throw mErr;
+
+      const memberMap = new Map<string, { full_name: string; email: string }>();
+      for (const m of members || []) {
+        if (m.user_id) {
+          memberMap.set(m.user_id, { full_name: m.full_name, email: m.email });
+        }
+      }
+
+      // 4. Combine
+      const combined: ApprovalTemplateRow[] = templates.map(t => {
+        const ver = versionMap.get(t.template_id);
+        const creator = memberMap.get(t.created_by);
+        return {
+          template_id: t.template_id,
+          approval_template_name: t.approval_template_name,
+          approval_type: t.approval_type,
+          description: t.description,
+          created_by: t.created_by,
+          created_at: t.created_at,
+          updated_at: t.updated_at,
+          tenant_id: t.tenant_id,
+          version_number: ver?.version_number ?? null,
+          version_status: ver?.status ?? null,
+          creator_name: creator?.full_name ?? null,
+          creator_email: creator?.email ?? null,
+        };
+      });
+
+      setData(combined);
+    } catch (err: any) {
+      console.error('Failed to fetch approval templates:', err);
+      setError(err.message || 'Failed to fetch data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [client, tenantId]);
+
+  useEffect(() => {
+    if (clientError) {
+      setError(clientError.message);
+      setIsLoading(false);
+      return;
+    }
+
+    void fetchData();
+  }, [clientError, fetchData]);
+
+  return { data, isLoading, error, refetch: fetchData };
 }
