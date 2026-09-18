@@ -58,7 +58,7 @@ export function ApprovalAuthorities() {
   // Close filter dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
+      if (filterDropdownRef.current && !event.composedPath().includes(filterDropdownRef.current)) {
         setShowFilterDropdown(false);
       }
     };
