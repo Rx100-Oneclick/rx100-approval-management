@@ -70,6 +70,7 @@ export function useXoRuntime() {
         scopes: runtime.bridge.context.scopes,
         hasScope: (scope: string) => runtime.bridge.context.scopes.includes(scope),
         navigationTarget: runtime.navigationTarget,
+        navigationTarget: runtime.navigationTarget,
         isRuntimeHosted: true,
       };
     }
@@ -86,6 +87,7 @@ export function useXoRuntime() {
       clientId: null,
       scopes: [] as string[],
       hasScope: () => false,
+      navigationTarget: null,
       navigationTarget: null,
       isRuntimeHosted: false,
     };
