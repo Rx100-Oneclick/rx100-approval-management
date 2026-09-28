@@ -16,7 +16,6 @@ export class XoosApprovalAuthorityManagementElement
   private root: Root | null = null;
   private mountPoint: HTMLDivElement | null = null;
   private portalRoot: HTMLDivElement | null = null;
-  private portalRoot: HTMLDivElement | null = null;
 
   connectedCallback() {
     if (this.root) return;
