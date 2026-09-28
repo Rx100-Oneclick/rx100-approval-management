@@ -9,11 +9,14 @@ import {
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { XOOSMicroappBridge } from "@xoos/contracts";
 import { createXOOSSupabaseClient } from "@xoos/data-client";
+import { microappConfig } from "../../microapp.config";
 import { supabase as previewSupabase } from "@/integrations/supabase/client";
 
 interface RuntimeValue {
   bridge: XOOSMicroappBridge;
   props: Record<string, unknown>;
+  portalRoot: HTMLElement | null;
+  navigationTarget: HTMLElement | null;
 }
 
 const RuntimeContext = createContext<RuntimeValue | null>(null);
@@ -21,14 +24,18 @@ const RuntimeContext = createContext<RuntimeValue | null>(null);
 export function BridgeProvider({
   bridge,
   props = {},
+  portalRoot = null,
+  navigationTarget = null,
   children,
 }: {
   bridge: XOOSMicroappBridge;
   props?: Record<string, unknown>;
+  portalRoot?: HTMLElement | null;
+  navigationTarget?: HTMLElement | null;
   children: ReactNode;
 }) {
   return (
-    <RuntimeContext.Provider value={{ bridge, props }}>
+    <RuntimeContext.Provider value={{ bridge, props, portalRoot, navigationTarget }}>
       {children}
     </RuntimeContext.Provider>
   );
@@ -36,6 +43,10 @@ export function BridgeProvider({
 
 export function useOptionalBridgeRuntime(): RuntimeValue | null {
   return useContext(RuntimeContext);
+}
+
+export function usePortalContainer(): HTMLElement | null {
+  return useOptionalBridgeRuntime()?.portalRoot ?? null;
 }
 
 export function useXoRuntime() {
@@ -58,6 +69,7 @@ export function useXoRuntime() {
         clientId: runtime.bridge.context.client.id,
         scopes: runtime.bridge.context.scopes,
         hasScope: (scope: string) => runtime.bridge.context.scopes.includes(scope),
+        navigationTarget: runtime.navigationTarget,
         isRuntimeHosted: true,
       };
     }
@@ -74,6 +86,7 @@ export function useXoRuntime() {
       clientId: null,
       scopes: [] as string[],
       hasScope: () => false,
+      navigationTarget: null,
       isRuntimeHosted: false,
     };
   }, [runtime]);
@@ -88,52 +101,23 @@ export async function openChildMicroapp(
     throw new Error("XOOS Runtime navigation is unavailable in standalone preview mode.");
   }
 
-  const navigation = bridge.navigation as unknown as {
-    openMicroapp?: (input: {
-      microappKey: string;
-      props?: Record<string, unknown>;
-    }) => Promise<void> | void;
-    navigate?: (
-      key: string,
-      props?: Record<string, unknown>,
-    ) => Promise<void> | void;
-  };
-
-  if (typeof navigation.openMicroapp === "function") {
-    await navigation.openMicroapp({ microappKey, props });
-    return;
-  }
-
-  if (typeof navigation.navigate === "function") {
-    await navigation.navigate(microappKey, props);
-    return;
-  }
-
-  throw new Error("XOOS Runtime navigation API is unavailable.");
+  await bridge.navigation.navigate(
+    microappKey,
+    Object.keys(props).length > 0 ? { props } : undefined,
+  );
 }
 
 const clientCache = new WeakMap<XOOSMicroappBridge, Map<string, Promise<SupabaseClient>>>();
 
-function resolveDatasourceKey(props: Record<string, unknown>): string {
-  const supplied =
-    typeof props.datasourceKey === "string"
-      ? props.datasourceKey.trim()
-      : typeof props.datasource_key === "string"
-        ? props.datasource_key.trim()
-        : "";
-
-  if (supplied) return supplied;
-
-  throw new Error(
-    "BLOCKED_DATASOURCE_MAPPING: XOOS datasourceKey was not supplied by the runtime/control-plane mapping.",
-  );
+function resolveDatasourceKey(): string {
+  return microappConfig.dataProjectKey;
 }
 
 async function getRuntimeClient(
   bridge: XOOSMicroappBridge,
   props: Record<string, unknown>,
 ): Promise<SupabaseClient> {
-  const datasourceKey = resolveDatasourceKey(props);
+  const datasourceKey = resolveDatasourceKey();
 
   let clients = clientCache.get(bridge);
   if (!clients) {
