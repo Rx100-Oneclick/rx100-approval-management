@@ -261,7 +261,7 @@ export function ApprovalAuthorities() {
                 {/* Create Approval Button */}
                 <button
                   onClick={() => { void openChildMicroapp(bridge, 'create-authority'); }}
-                  className="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all"
+                  className="xoos-primary-action px-4 py-2.5 text-sm font-semibold rounded-lg shadow-sm transition-all"
                 >
                   Create Approval Workflow
                 </button>

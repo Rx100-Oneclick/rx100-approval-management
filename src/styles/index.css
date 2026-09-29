@@ -5,6 +5,7 @@
 @tailwind utilities;
 
 @layer base {
+  :host,
   :root {
     --font-size: 16px;
     --background: 0 0% 100%;
@@ -112,4 +113,21 @@
 
 [data-xoos-microapp] {
   min-height: 100%;
+}
+
+
+.xoos-primary-action {
+  border: 0;
+  color: #ffffff;
+  background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+  cursor: pointer;
+}
+
+.xoos-primary-action:hover {
+  background: linear-gradient(90deg, #4338ca 0%, #6d28d9 100%);
+}
+
+.xoos-primary-action:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
 }

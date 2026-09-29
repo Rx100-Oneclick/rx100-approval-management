@@ -101,10 +101,12 @@ export async function openChildMicroapp(
     throw new Error("XOOS Runtime navigation is unavailable in standalone preview mode.");
   }
 
-  await bridge.navigation.navigate(
-    microappKey,
-    Object.keys(props).length > 0 ? { props } : undefined,
-  );
+  const childProps = {
+    parentMicroappKey: microappConfig.microappKey,
+    ...props,
+  };
+
+  await bridge.navigation.navigate(microappKey, { props: childProps });
 }
 
 const clientCache = new WeakMap<XOOSMicroappBridge, Map<string, Promise<SupabaseClient>>>();
