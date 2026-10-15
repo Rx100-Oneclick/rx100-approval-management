@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useXOAuth } from '@xoos/microapp-adapter';
 import { useApprovalAuthorityDataClient } from '@/microapp/runtime';
 
 export interface ApprovalTemplateRow {
@@ -10,15 +11,40 @@ export interface ApprovalTemplateRow {
   created_at: string | null;
   updated_at: string | null;
   tenant_id: string;
-  // joined fields
   version_number: string | null;
   version_status: string | null;
   creator_name: string | null;
   creator_email: string | null;
 }
 
+function readList(response: unknown, key: string): unknown[] {
+  if (Array.isArray(response)) return response;
+  if (!response || typeof response !== 'object') return [];
+  const record = response as Record<string, unknown>;
+  if (Array.isArray(record.data)) return record.data;
+  if (Array.isArray(record[key])) return record[key] as unknown[];
+  if (Array.isArray(record.items)) return record.items;
+  return [];
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object'
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function readString(record: Record<string, unknown> | null, ...keys: string[]): string | null {
+  if (!record) return null;
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return null;
+}
+
 export function useApprovalTemplates(tenantId: string | null) {
   const { client, error: clientError } = useApprovalAuthorityDataClient();
+  const xoAuth = useXOAuth();
   const [data, setData] = useState<ApprovalTemplateRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +59,6 @@ export function useApprovalTemplates(tenantId: string | null) {
     setError(null);
 
     try {
-      // 1. Fetch templates
       const { data: templates, error: tErr } = await client
         .from('approval_templates')
         .select('*')
@@ -47,8 +72,6 @@ export function useApprovalTemplates(tenantId: string | null) {
       }
 
       const templateIds = templates.map(t => t.template_id);
-
-      // 2. Fetch latest versions for each template
       const { data: versions, error: vErr } = await client
         .from('approval_template_versions')
         .select('*')
@@ -57,7 +80,6 @@ export function useApprovalTemplates(tenantId: string | null) {
 
       if (vErr) throw vErr;
 
-      // Build map: template_id -> latest version
       const versionMap = new Map<string, { version_number: string; status: string }>();
       for (const v of versions || []) {
         if (!versionMap.has(v.template_id)) {
@@ -68,23 +90,19 @@ export function useApprovalTemplates(tenantId: string | null) {
         }
       }
 
-      // 3. Fetch creator info from organization_members
-      const creatorIds = [...new Set(templates.map(t => t.created_by))];
-      const { data: members, error: mErr } = await client
-        .from('organization_members')
-        .select('user_id, full_name, email')
-        .in('user_id', creatorIds);
-
-      if (mErr) throw mErr;
-
+      const memberResponse = await xoAuth.organizationMembers.list();
       const memberMap = new Map<string, { full_name: string; email: string }>();
-      for (const m of members || []) {
-        if (m.user_id) {
-          memberMap.set(m.user_id, { full_name: m.full_name, email: m.email });
-        }
+      for (const value of readList(memberResponse, 'organizationMembers')) {
+        const member = asRecord(value);
+        const userId = readString(member, 'user_id', 'userId', 'id', 'uuid', 'member_id', 'memberId');
+        if (!userId) continue;
+        memberMap.set(userId, {
+          full_name:
+            readString(member, 'full_name', 'fullName', 'name', 'display_name', 'displayName') || '—',
+          email: readString(member, 'email') || '',
+        });
       }
 
-      // 4. Combine
       const combined: ApprovalTemplateRow[] = templates.map(t => {
         const ver = versionMap.get(t.template_id);
         const creator = memberMap.get(t.created_by);
@@ -111,7 +129,7 @@ export function useApprovalTemplates(tenantId: string | null) {
     } finally {
       setIsLoading(false);
     }
-  }, [client, tenantId]);
+  }, [client, tenantId, xoAuth]);
 
   useEffect(() => {
     if (clientError) {

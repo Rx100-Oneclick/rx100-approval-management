@@ -7,11 +7,6 @@ function xoosManifestPlugin(): Plugin {
   return {
     name: "xoos-manifest",
     generateBundle() {
-      const resolvedEntry =
-        process.env.XOOS_MICROAPP_ENTRY?.trim() ||
-        microappConfig.entry?.trim() ||
-        "./xoos-microapp.js";
-
       this.emitFile({
         type: "asset",
         fileName: "xoos-manifest.json",
@@ -22,7 +17,8 @@ function xoosManifestPlugin(): Plugin {
               microappKey: microappConfig.microappKey,
               version: microappConfig.version,
               elementName: microappConfig.elementName,
-              entry: resolvedEntry,
+              entry: "xoos-microapp.js",
+              deliveryType: microappConfig.deliveryType,
               contractVersion: microappConfig.contractVersion,
               minimumRuntimeVersion: microappConfig.minimumRuntimeVersion,
             },

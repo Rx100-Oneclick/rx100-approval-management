@@ -3,7 +3,6 @@ export const microappConfig = {
   microappKey: "approval-authority-mgmt",
   version: "1.0.4",
   elementName: "xoos-approval-authority-management",
-  entry: "https://bolngokjtpjomleifuto.supabase.co/storage/v1/object/public/xoos-microapps/xoos-approval-authority-management/1.0.4/xoos-microapp.js",
   deliveryType: "native_esm",
   contractVersion: "1",
   minimumRuntimeVersion: "1.0.0",
