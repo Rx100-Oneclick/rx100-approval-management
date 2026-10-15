@@ -1,9 +1,14 @@
 {
   "schemaVersion": "1",
   "microappKey": "approval-authority-mgmt",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "elementName": "xoos-approval-authority-management",
-  "entry": "https://bolngokjtpjomleifuto.supabase.co/storage/v1/object/public/xoos-microapps/xoos-approval-authority-management/1.0.4/xoos-microapp.js",
+  "entry": "xoos-microapp.js",
+  "deliveryType": "native_esm",
   "contractVersion": "1",
-  "minimumRuntimeVersion": "1.0.0"
+  "minimumRuntimeVersion": "1.0.0",
+  "integrity": {
+    "algorithm": "sha256",
+    "value": "dedf4f3c279aedc0902ac73878c16179bd102be3ed1a951e54d35c357861a730"
+  }
 }
