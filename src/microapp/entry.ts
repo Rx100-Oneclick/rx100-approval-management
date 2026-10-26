@@ -1,4 +1,5 @@
-import { createElement } from "react";
+import { createElement, Fragment } from "react";
+import { Toaster } from "sonner";
 import {
   defineXOOSMicroapp,
   useXOOS,
@@ -20,9 +21,7 @@ function resolveNavigationTarget(portalRoot: HTMLElement | null): HTMLElement | 
   return null;
 }
 
-function ApprovalAuthorityManagementAdapterRoot(
-  props: Record<string, unknown>,
-) {
+function ApprovalAuthorityManagementAdapterRoot(props: Record<string, unknown>) {
   const bridge = useXOOS();
   const portalRoot = useXOOSPortalRoot();
   const navigationTarget = resolveNavigationTarget(portalRoot);
@@ -35,7 +34,12 @@ function ApprovalAuthorityManagementAdapterRoot(
       portalRoot,
       navigationTarget,
     },
-    createElement(App),
+    createElement(
+      Fragment,
+      null,
+      createElement(App),
+      createElement(Toaster, { position: "top-right", richColors: true }),
+    ),
   );
 }
 

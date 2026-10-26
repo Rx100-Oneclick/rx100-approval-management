@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, X, ChevronLeft, ChevronRight, Eye, ChevronDown, Clock, User, FileText } from 'lucide-react';
 import { format } from 'date-fns';
+import { useXOOSPermissions } from '@xoos/microapp-adapter';
+import { toast } from 'sonner';
 import { useAuthFromParent } from '@/hooks/useAuthFromParent';
 import { useApprovalTemplates, type ApprovalTemplateRow } from '@/hooks/useApprovalTemplates';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -14,6 +16,7 @@ const statusOptions = ['Active', 'Draft', 'Retired'];
 
 export function ApprovalAuthorities() {
   const { tenantId, isLoading: authLoading, bridge } = useAuthFromParent();
+  const permissions = useXOOSPermissions();
   const { data: templates, isLoading: dataLoading, error, refetch } = useApprovalTemplates(tenantId);
 
   const [selectedAuthority, setSelectedAuthority] = useState<ApprovalTemplateRow | null>(null);
@@ -68,6 +71,15 @@ export function ApprovalAuthorities() {
   }, []);
 
   const closeDrawer = () => setSelectedAuthority(null);
+
+  const handleCreateApproval = () => {
+    if (!permissions.can("CREATE")) {
+      toast.error("You don't have permission to create this record.");
+      return;
+    }
+    permissions.require("CREATE");
+    void openChildMicroapp(bridge, "create-authority");
+  };
 
   const toggleFilter = (category: keyof FilterState, value: string) => {
     setFilters(prev => ({
@@ -260,7 +272,7 @@ export function ApprovalAuthorities() {
                 
                 {/* Create Approval Button */}
                 <button
-                  onClick={() => { void openChildMicroapp(bridge, 'create-authority'); }}
+                  onClick={handleCreateApproval}
                   className="xoos-primary-action px-4 py-2.5 text-sm font-semibold rounded-lg shadow-sm transition-all"
                 >
                   Create Approval Workflow
