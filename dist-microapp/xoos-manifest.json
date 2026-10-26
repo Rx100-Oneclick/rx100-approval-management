@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "microappKey": "approval-authority-mgmt",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "elementName": "xoos-approval-authority-management",
   "entry": "xoos-microapp.js",
   "deliveryType": "native_esm",
@@ -9,6 +9,6 @@
   "minimumRuntimeVersion": "1.0.0",
   "integrity": {
     "algorithm": "sha256",
-    "value": "400a453ddf86c92e61df14492947e0098e033c51cc6f9aff43a7a81931237737"
+    "value": "8060026533d3fecb4d1a9565440766c574250745081477f625c9b8f6e1ffa7c0"
   }
 }
