@@ -1,0 +1,68 @@
+name: XOOS Publish GitHub Release v1.0.7
+
+on:
+  push:
+    branches:
+      - DEV_BR_v1.0.8
+    paths:
+      - .github/workflows/publish-v1.0.7-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: xoos-approval-management-v1.0.7-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Verify frozen tag and publish enterprise GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout release publication branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Verify frozen source branches and genuine annotated tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APPROVED_SHA: 6485b34805a455534e214e04d21465630980b9a4
+          TAG: v1.0.7
+          EXPECTED_TAG_OBJECT: dadd68ca8523b2c1bd52db7a21f5561fd7f33592
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "Rx100-Oneclick/rx100-approval-management"
+          test -s release-notes/v1.0.7.md
+          for BRANCH in main DEV_BR_v1.0.7 REL_BR_v1.0.7; do
+            SHA="$(git ls-remote --heads origin "refs/heads/$BRANCH" | cut -f1)"
+            test "$SHA" = "$APPROVED_SHA" || { echo "Unapproved branch head: $BRANCH"; exit 1; }
+          done
+          OBJECT="$(git ls-remote --tags origin "refs/tags/$TAG" | cut -f1)"
+          PEELED="$(git ls-remote --tags origin "refs/tags/$TAG^{}" | cut -f1)"
+          test "$OBJECT" = "$EXPECTED_TAG_OBJECT"
+          test "$PEELED" = "$APPROVED_SHA"
+          if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Existing GitHub Release found; refusing duplicate or overwrite"
+            exit 1
+          fi
+
+      - name: Publish enterprise source GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v1.0.7
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" -R "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "XOOS Approval Authority Management v1.0.7 — Approval Governance & Workflow Inventory" \
+            --notes-file release-notes/v1.0.7.md \
+            --latest
+          test "$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json tagName --jq .tagName)" = "$TAG"
+          test "$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" = false
+          test "$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json isPrerelease --jq .isPrerelease)" = false
+          gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json url --jq .url
