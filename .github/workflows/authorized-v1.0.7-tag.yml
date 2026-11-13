@@ -1,0 +1,90 @@
+name: XOOS Authorized v1.0.7 Annotated Tag Execution
+
+on:
+  push:
+    branches:
+      - automation/approved-v1.0.7-tag
+    paths:
+      - .github/workflows/authorized-v1.0.7-tag.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: xoos-approval-authority-v1.0.7-tag
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Verify approved release and create immutable annotated tag
+    runs-on: ubuntu-latest
+    environment: xoos-release-approval
+    timeout-minutes: 25
+    env:
+      APPROVED_SHA: 6485b34805a455534e214e04d21465630980b9a4
+      TAG: v1.0.7
+    steps:
+      - name: Checkout exact frozen release commit
+        uses: actions/checkout@v4
+        with:
+          ref: 6485b34805a455534e214e04d21465630980b9a4
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify approved commit and absence of remote tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "Rx100-Oneclick/rx100-approval-management"
+          test "$(git rev-parse HEAD)" = "$APPROVED_SHA"
+          for BRANCH in main DEV_BR_v1.0.7; do
+            ACTUAL="$(git ls-remote --heads origin "refs/heads/$BRANCH" | cut -f1)"
+            test "$ACTUAL" = "$APPROVED_SHA" || { echo "$BRANCH differs from approved SHA"; exit 1; }
+          done
+          test -z "$(git ls-remote --tags origin "refs/tags/$TAG")"
+          test -z "$(git ls-remote --tags origin "refs/tags/$TAG^{}")"
+          test -z "$(git tag --list "$TAG")"
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install, lint and build exact approved source
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run lint
+          npm run build
+          npm run build:microapp
+
+      - name: Verify native Microapp release manifest and SHA-256
+        run: |
+          node --input-type=module -e '
+          import { readFileSync } from "node:fs";
+          import { createHash } from "node:crypto";
+          const m=JSON.parse(readFileSync("dist-microapp/xoos-manifest.json","utf8"));
+          const js=readFileSync("dist-microapp/xoos-microapp.js");
+          if(m.version!=="1.0.7"||m.microappKey!=="approval-authority-mgmt"||m.elementName!=="xoos-approval-authority-management"||m.integrity?.algorithm!=="sha256"||m.integrity?.value!==createHash("sha256").update(js).digest("hex")) throw Error("Microapp release integrity mismatch");
+          '
+
+      - name: Create and verify annotated release tag without force
+        shell: bash
+        run: |
+          set -euo pipefail
+          for BRANCH in main DEV_BR_v1.0.7; do
+            test "$(git ls-remote --heads origin "refs/heads/$BRANCH" | cut -f1)" = "$APPROVED_SHA"
+          done
+          test -z "$(git ls-remote --tags origin "refs/tags/$TAG")"
+          test -z "$(git ls-remote --tags origin "refs/tags/$TAG^{}")"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" "$APPROVED_SHA" -m "Release $TAG - XOOS Approval Authority Management; approved frozen commit"
+          test "$(git cat-file -t "refs/tags/$TAG")" = tag
+          test "$(git rev-parse "$TAG^{commit}")" = "$APPROVED_SHA"
+          git push origin "refs/tags/$TAG:refs/tags/$TAG"
+          test "$(git ls-remote --tags origin "refs/tags/$TAG" | cut -f1)" = "$(git rev-parse "refs/tags/$TAG")"
+          test "$(git ls-remote --tags origin "refs/tags/$TAG^{}" | cut -f1)" = "$APPROVED_SHA"
