@@ -1,0 +1,120 @@
+name: XOOS Create Annotated Release Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Approved release version (X.Y.Z)"
+        required: true
+        type: string
+      expected_sha:
+        description: "Optional confirmation SHA (automatically bound to workflow commit)"
+        required: false
+        type: string
+      freeze_attested:
+        description: "I confirm developer self-review and browser/runtime release validation are complete"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: xoos-release-tag
+  cancel-in-progress: false
+
+jobs:
+  create-annotated-tag:
+    if: ${{ inputs.freeze_attested == true }}
+    runs-on: ubuntu-latest
+    environment: xoos-release-approval
+    timeout-minutes: 20
+    steps:
+      - name: Checkout approved repository source
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify release refs and tag absence
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+          EXPECTED_SHA: ${{ github.sha }}
+          CONFIRM_SHA: ${{ inputs.expected_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Invalid version"; exit 1; }
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "Invalid commit SHA"; exit 1; }
+
+          if [ -n "$CONFIRM_SHA" ] && [ "$CONFIRM_SHA" != "$EXPECTED_SHA" ]; then
+            echo "Confirmation SHA does not match approved workflow commit"; exit 1
+          fi
+
+          TAG="v${VERSION}"
+          DEV="DEV_BR_v${VERSION}"
+
+          git fetch origin --tags
+          git fetch origin "refs/heads/main:refs/remotes/origin/main" \
+            "refs/heads/${DEV}:refs/remotes/origin/${DEV}"
+
+          test -z "$(git status --porcelain)"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$(git rev-parse origin/main)" = "$EXPECTED_SHA"
+          test "$(git rev-parse "origin/${DEV}")" = "$EXPECTED_SHA"
+
+          if git show-ref --verify --quiet "refs/tags/${TAG}"; then
+            echo "Release tag already exists locally: ${TAG}"
+            exit 1
+          fi
+          test -z "$(git ls-remote --tags origin "refs/tags/${TAG}")"
+          test -z "$(git ls-remote --tags origin "refs/tags/${TAG}^{}")"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
+
+      - name: Build XOOS Microapp
+        run: npm run build:microapp
+
+      - name: Create, push, and verify annotated release tag
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+          EXPECTED_SHA: ${{ github.sha }}
+          CONFIRM_SHA: ${{ inputs.expected_sha }}
+        run: |
+          set -euo pipefail
+          TAG="v${VERSION}"
+          DEV="DEV_BR_v${VERSION}"
+
+          # Recheck remote heads and tag immediately before the write.
+          test "$(git ls-remote --heads origin refs/heads/main | cut -f1)" = "$EXPECTED_SHA"
+          test "$(git ls-remote --heads origin "refs/heads/${DEV}" | cut -f1)" = "$EXPECTED_SHA"
+          test -z "$(git ls-remote --tags origin "refs/tags/${TAG}")"
+          test -z "$(git ls-remote --tags origin "refs/tags/${TAG}^{}")"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG}" "$EXPECTED_SHA" \
+            -m "Release ${TAG} - XOOS Approval Authority Management; approved release commit"
+
+          test "$(git cat-file -t "refs/tags/${TAG}")" = "tag"
+          test "$(git rev-parse "${TAG}^{commit}")" = "$EXPECTED_SHA"
+
+          git push origin "refs/tags/${TAG}:refs/tags/${TAG}"
+
+          REMOTE_TAG_OBJECT="$(git ls-remote --tags origin "refs/tags/${TAG}" | cut -f1)"
+          REMOTE_COMMIT="$(git ls-remote --tags origin "refs/tags/${TAG}^{}" | cut -f1)"
+          test "$REMOTE_TAG_OBJECT" = "$(git rev-parse "refs/tags/${TAG}")"
+          test "$REMOTE_COMMIT" = "$EXPECTED_SHA"
+          echo "Annotated tag ${TAG} verified at ${EXPECTED_SHA}"
