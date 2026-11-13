@@ -1,0 +1,45 @@
+name: XOOS Microapp Release Validation
+on:
+  push:
+    branches: [main, 'DEV_BR_v*']
+  pull_request:
+    branches: [main, 'DEV_BR_v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Approval Authority Microapp
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: ESLint
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: npm run lint
+      - name: Build application
+        run: npm run build
+      - name: Build native ESM Microapp and manifest
+        run: npm run build:microapp
+      - name: Verify v1.0.7 manifest SHA-256 integrity
+        run: |
+          node --input-type=module -e '
+          import { readFileSync } from "node:fs";
+          import { createHash } from "node:crypto";
+          const m=JSON.parse(readFileSync("dist-microapp/xoos-manifest.json","utf8"));
+          const js=readFileSync("dist-microapp/xoos-microapp.js");
+          const sha=createHash("sha256").update(js).digest("hex");
+          if(m.version!=="1.0.7"||m.microappKey!=="approval-authority-mgmt"||m.elementName!=="xoos-approval-authority-management"||m.integrity?.algorithm!=="sha256"||m.integrity?.value!==sha) throw Error("Manifest identity or SHA-256 mismatch");
+          console.log("Approved authority Microapp manifest and SHA-256 PASS");
+          '

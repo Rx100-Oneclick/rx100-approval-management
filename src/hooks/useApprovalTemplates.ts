@@ -123,9 +123,9 @@ export function useApprovalTemplates(tenantId: string | null) {
       });
 
       setData(combined);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch approval templates:', err);
-      setError(err.message || 'Failed to fetch data');
+      setError(err instanceof Error ? err.message : 'Failed to fetch data');
     } finally {
       setIsLoading(false);
     }
